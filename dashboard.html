@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steam Game Analysis Dashboard</title>
+    <meta name="description" content="Dashboard analisis strategi sukses game di platform Steam - Project 1 Big Data">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['"Plus Jakarta Sans"', 'Inter', 'sans-serif']
+                    },
+                    colors: {
+                        primary: '#4f46e5',
+                        brand: {
+                            indigo: '#4f46e5',
+                            dark: '#0f172a',
+                            surface: '#f4f6fa',
+                            card: '#ffffff',
+                            muted: '#94a3b8'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background-color: #f4f6fa;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.04) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(56, 189, 248, 0.04) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(244, 246, 250, 1) 0px, transparent 50%);
+            color: #1e293b;
+            font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+        }
+        
+        /* Modern Dribbble-style cards */
+        .dash-card {
+            background: #ffffff;
+            border-radius: 26px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 
+                0 4px 20px -2px rgba(15, 23, 42, 0.03),
+                0 2px 6px -1px rgba(15, 23, 42, 0.02);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dash-card:hover {
+            box-shadow: 
+                0 14px 30px -4px rgba(79, 70, 229, 0.07),
+                0 4px 10px -2px rgba(15, 23, 42, 0.03);
+            transform: translateY(-2px);
+        }
+        
+        /* Featured Hero KPI Card */
+        .featured-hero-card {
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 60%, #3730a3 100%);
+            position: relative;
+            overflow: hidden;
+            border-radius: 26px;
+            box-shadow: 0 10px 30px -5px rgba(79, 70, 229, 0.35);
+        }
+        .featured-hero-card::before {
+            content: '';
+            position: absolute;
+            top: -40%;
+            right: -25%;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 70%);
+            pointer-events: none;
+        }
+        .featured-hero-card::after {
+            content: '';
+            position: absolute;
+            bottom: -35%;
+            left: -15%;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 70%);
+            pointer-events: none;
+        }
+
+        /* Sidebar Pill Dock */
+        .sidebar-dock {
+            background: #ffffff;
+            border-radius: 28px;
+            box-shadow: 0 4px 24px -2px rgba(15, 23, 42, 0.04);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .dock-btn {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            transition: all 0.2s ease;
+            color: #94a3b8;
+        }
+        .dock-btn:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+        .dock-btn.active {
+            background: #0f172a;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+        }
+
+        /* Circular arrow button like in reference design */
+        .arrow-action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 9999px;
+            background: #0f172a;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+        }
+        .arrow-action-btn:hover {
+            background: #4f46e5;
+            transform: scale(1.05);
+        }
+
+        .arrow-action-btn-light {
+            width: 30px;
+            height: 30px;
+            border-radius: 9999px;
+            background: #f1f5f9;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .arrow-action-btn-light:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        /* Subtle Pill Badge */
+        .pill-badge {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* ApexCharts Overrides for Ultra Clean Light Mode */
+        .apexcharts-toolbar, .apexcharts-menu-icon { display: none !important; }
+        .apexcharts-text { fill: #64748b !important; font-family: 'Plus Jakarta Sans', sans-serif !important; }
+        .apexcharts-title-text { fill: #0f172a !important; font-weight: 700 !important; }
+        .apexcharts-legend-text { color: #475569 !important; font-family: 'Plus Jakarta Sans', sans-serif !important; font-weight: 500 !important; }
+        
+        /* Force All Target/Annotation Labels to White */
+        .apexcharts-yaxis-annotations text,
+        .apexcharts-xaxis-annotations text,
+        .apexcharts-point-annotations text,
+        text.apexcharts-yaxis-annotation-label,
+        text.apexcharts-xaxis-annotation-label,
+        .apexcharts-yaxis-annotation-label,
+        .apexcharts-xaxis-annotation-label,
+        .apexcharts-yaxis-annotation-label tspan,
+        .apexcharts-xaxis-annotation-label tspan {
+            fill: #ffffff !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+        }
+
+        .apexcharts-tooltip { 
+            background: #ffffff !important; 
+            border: 1px solid #e2e8f0 !important; 
+            box-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.12) !important;
+            border-radius: 14px !important;
+            color: #0f172a !important; 
+            padding: 2px !important;
+        }
+        .apexcharts-tooltip-title { 
+            background: #f8fafc !important; 
+            border-bottom: 1px solid #f1f5f9 !important; 
+            color: #334155 !important; 
+            font-weight: 700 !important;
+            padding: 8px 12px !important;
+        }
+        .apexcharts-tooltip-series-group {
+            padding: 6px 12px !important;
+        }
+        .apexcharts-xaxistooltip, .apexcharts-yaxistooltip { 
+            background: #0f172a !important; 
+            border: none !important; 
+            color: #ffffff !important; 
+            border-radius: 8px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2) !important;
+        }
+
+        /* Smooth scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="min-h-screen antialiased p-4 md:p-6 lg:p-8">
+
+<div class="max-w-[1520px] mx-auto space-y-6">
+
+    <!-- Main Content Area (Full Width, No Sidebar) -->
+    <main class="space-y-6">
+
+        <!-- Top Header (Ultra Clean Matching Reference Image) -->
+        <header class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pt-1">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                    Steam Game Analytics <span class="text-2xl"></span>
+                </h1>
+                <p class="text-slate-400 text-xs md:text-sm font-medium mt-1">
+                    Analisis performa, strategi harga & monetisasi game Steam • Project 1 Big Data
+                </p>
+            </div>
+
+            <!-- Top Right Badge: 500 Sample Dataset -->
+            <div class="flex items-center gap-2.5 bg-white border border-slate-200/80 rounded-full px-4 py-2 shadow-xs">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span class="text-xs font-extrabold text-slate-900">500</span>
+                <span class="text-xs font-semibold text-slate-500">Sample Dataset</span>
+            </div>
+        </header>
+
+        <!-- KPI / Stats Cards Grid (4 Cards Row) -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            
+            <!-- Card 1: Featured Indigo (Reference Mockup Style) -->
+            <div class="featured-hero-card p-6 text-white flex flex-col justify-between">
+                <div class="relative z-10 flex justify-between items-start">
+                    <div>
+                        <p class="text-[11px] font-bold tracking-[0.14em] text-indigo-200 uppercase">Total Sample</p>
+                        <p class="text-3xl font-extrabold tracking-tight mt-3">500 <span class="text-base font-semibold text-indigo-200">Games</span></p>
+                    </div>
+                    <!-- Diagonal arrow in glass circle -->
+                    <div class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center backdrop-blur-xs transition-all cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+                    </div>
+                </div>
+                <div class="relative z-10 mt-5 pt-3 border-t border-white/10 flex items-center gap-2">
+                    <span class="pill-badge bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                        100% Bersih
+                    </span>
+                    <span class="text-[11px] text-indigo-200/80">Kaggle Steam Sample</span>
+                </div>
+            </div>
+
+            <!-- Card 2: Rata-rata Harga -->
+            <div class="dash-card p-6 flex flex-col justify-between">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-[11px] font-bold tracking-[0.14em] text-slate-400 uppercase">Rata-rata Harga</p>
+                        <p class="text-3xl font-extrabold text-slate-900 tracking-tight mt-3">$4.04</p>
+                    </div>
+                    <div class="arrow-action-btn-light">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+                    </div>
+                </div>
+                <div class="mt-5 pt-3 border-t border-slate-100 flex items-center gap-2">
+                    <span class="pill-badge bg-blue-50 text-blue-600">
+                        Median $2.79
+                    </span>
+                    <span class="text-[11px] text-slate-400">Harga Terjangkau</span>
+                </div>
+            </div>
+
+            <!-- Card 3: Avg Review Positif -->
+            <div class="dash-card p-6 flex flex-col justify-between">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-[11px] font-bold tracking-[0.14em] text-slate-400 uppercase">Avg Review Positif</p>
+                        <p class="text-3xl font-extrabold text-slate-900 tracking-tight mt-3">75.7%</p>
+                    </div>
+                    <div class="arrow-action-btn-light">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+                    </div>
+                </div>
+                <div class="mt-5 pt-3 border-t border-slate-100 flex items-center gap-2">
+                    <span class="pill-badge bg-emerald-50 text-emerald-600">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                        +5.7% vs Target
+                    </span>
+                    <span class="text-[11px] text-slate-400">Rating Sehat</span>
+                </div>
+            </div>
+
+            <!-- Card 4: Total Genre -->
+            <div class="dash-card p-6 flex flex-col justify-between">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-[11px] font-bold tracking-[0.14em] text-slate-400 uppercase">Total Genre</p>
+                        <p class="text-3xl font-extrabold text-slate-900 tracking-tight mt-3">13 <span class="text-base font-semibold text-slate-400">Kategori</span></p>
+                    </div>
+                    <div class="arrow-action-btn-light">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+                    </div>
+                </div>
+                <div class="mt-5 pt-3 border-t border-slate-100 flex items-center gap-2">
+                    <span class="pill-badge bg-violet-50 text-violet-600">
+                        Action (38.8%)
+                    </span>
+                    <span class="text-[11px] text-slate-400">Genre Terbanyak</span>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Charts Grid (2 Columns, Dribbble Inspired Cards) -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <!-- 1. Top 10 Genre Game -->
+            <div class="dash-card p-6 md:p-7">
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Top 10 Genre Game</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Distribusi genre game paling dominan di Steam</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="pill-badge bg-indigo-50 text-indigo-600">Volume</span>
+                        <div class="arrow-action-btn" title="View Details">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div id="chart-genre" class="w-full"></div>
+            </div>
+
+            <!-- 2. Rata-rata Peak CCU per Genre -->
+            <div class="dash-card p-6 md:p-7">
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Rata-rata Peak CCU per Genre</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Jumlah pemain bersamaan (concurrent) per genre</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="pill-badge bg-amber-50 text-amber-600">Pemain Aktif</span>
+                        <div class="arrow-action-btn" title="View Details">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div id="chart-ccu" class="w-full"></div>
+            </div>
+
+            <!-- 3. Jumlah Game Dirilis per Bulan (Like Revenue Bar Chart in Reference) -->
+            <div class="dash-card p-6 md:p-7">
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Jumlah Game Dirilis per Bulan</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Pola waktu rilis game sepanjang tahun</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="pill-badge bg-slate-100 text-slate-600">Monthly</span>
+                        <div class="arrow-action-btn" title="View Details">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div id="chart-monthly" class="w-full"></div>
+            </div>
+
+            <!-- 4. Review Positif per Bulan Rilis (Smooth Curve) -->
+            <div class="dash-card p-6 md:p-7">
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Review Positif per Bulan Rilis</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Rata-rata persentase rating kepuasan pemain</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="pill-badge bg-emerald-50 text-emerald-600">Trend</span>
+                        <div class="arrow-action-btn" title="View Details">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div id="chart-monthly-review" class="w-full"></div>
+            </div>
+
+            <!-- 5. Distribusi Harga Game -->
+            <div class="dash-card p-6 md:p-7">
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Distribusi Harga Game</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Sebaran harga dalam rentang tier dolar ($)</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="pill-badge bg-sky-50 text-sky-600">Spread</span>
+                        <div class="arrow-action-btn" title="View Details">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div id="chart-price" class="w-full"></div>
+            </div>
+
+            <!-- 6. Proporsi Free vs Paid (Like Donut Chart in Reference) -->
+            <div class="dash-card p-6 md:p-7">
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Proporsi Free vs Paid</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Rasio game gratis dibanding game berbayar</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="pill-badge bg-orange-50 text-orange-600">Share</span>
+                        <div class="arrow-action-btn" title="View Details">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div id="chart-free-paid" class="w-full"></div>
+            </div>
+
+            <!-- 7. Rata-rata Review per Kategori Harga -->
+            <div class="dash-card p-6 md:p-7">
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Rata-rata Review per Kategori Harga</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Skor rating positif pada tiap kelompok tier harga</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="pill-badge bg-indigo-50 text-indigo-600">Tier Review</span>
+                        <div class="arrow-action-btn" title="View Details">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div id="chart-scatter" class="w-full"></div>
+            </div>
+
+            <!-- 8. Persentase Game Sukses (≥70%) -->
+            <div class="dash-card p-6 md:p-7">
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Persentase Game Sukses (Rating ≥ 70%)</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Peluang game mencapai ambang rekomendasi Steam</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="pill-badge bg-emerald-50 text-emerald-600">Benchmark</span>
+                        <div class="arrow-action-btn" title="View Details">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div id="chart-price-cat" class="w-full"></div>
+            </div>
+
+            <!-- 9. Korelasi Antar Variabel (Full Width 2 Columns) -->
+            <div class="dash-card p-6 md:p-7 lg:col-span-2">
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Korelasi Antar Variabel</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Kekuatan hubungan antar metrik numerik dataset (Pearson Correlation)</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="pill-badge bg-rose-50 text-rose-600">Pearson Matrix</span>
+                        <div class="arrow-action-btn" title="View Details">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div id="chart-correlation" class="w-full"></div>
+            </div>
+
+            <!-- 10. Problem Games Table (Styled Exactly Like Order List in Reference) -->
+            <div class="dash-card p-6 md:p-7 lg:col-span-2">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Game Bermasalah: Harga Premium, Rating Rendah</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Game dengan harga &gt; $10 namun rating review positif &lt; 70%</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="pill-badge bg-rose-50 text-rose-600 border border-rose-100 font-bold">
+                            ⚠️ Perlu Perhatian Khusus
+                        </span>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left" id="problem-table">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-[11px] uppercase tracking-wider text-slate-400 font-bold">
+                                <th class="pb-3 px-4">Nama Game</th>
+                                <th class="pb-3 px-4">Genre</th>
+                                <th class="pb-3 px-4">Harga</th>
+                                <th class="pb-3 px-4">Review Positif</th>
+                                <th class="pb-3 px-4">Total Ulasan</th>
+                                <th class="pb-3 px-4 text-right">Status Analisis</th>
+                            </tr>
+                        </thead>
+                        <tbody id="problem-tbody" class="divide-y divide-slate-100/80 text-xs"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 11. Insights & Rekomendasi Cards (Grid 5 Cards) -->
+            <div class="dash-card p-6 md:p-7 lg:col-span-2">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Insight & Rekomendasi Strategis</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Panduan keputusan vital bagi pengembang indie & publisher game Steam</p>
+                    </div>
+                    <span class="pill-badge bg-indigo-50 text-indigo-600 font-bold">5 Rekomendasi Utama</span>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div class="p-5 rounded-2xl bg-slate-50/70 border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/20 transition-all">
+                        <span class="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs font-bold mb-3 shadow-sm shadow-indigo-300">1</span>
+                        <h3 class="text-xs font-extrabold text-slate-800 mb-1.5">Genre Dominan</h3>
+                        <p class="text-[11px] text-slate-500 leading-relaxed"><strong class="text-slate-800">Action</strong> mendominasi (38.8%). Manfaatkan sub-genre niche untuk menghadapi kompetisi ketat.</p>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-slate-50/70 border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50/20 transition-all">
+                        <span class="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xs font-bold mb-3 shadow-sm shadow-emerald-300">2</span>
+                        <h3 class="text-xs font-extrabold text-slate-800 mb-1.5">Harga ≠ Rating</h3>
+                        <p class="text-[11px] text-slate-500 leading-relaxed">Korelasi harga vs rating sangat <strong class="text-slate-800">rendah (0.005)</strong>. Kualitas gameplay jauh lebih menentukan kepuasan.</p>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-slate-50/70 border border-slate-100 hover:border-amber-200 hover:bg-amber-50/20 transition-all">
+                        <span class="w-7 h-7 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xs font-bold mb-3 shadow-sm shadow-amber-300">3</span>
+                        <h3 class="text-xs font-extrabold text-slate-800 mb-1.5">Waktu Rilis</h3>
+                        <p class="text-[11px] text-slate-500 leading-relaxed">Rilis awal tahun (Januari) mencatat rating tertinggi <strong class="text-slate-800">(80.5%)</strong>. Manfaatkan window rilis yang sepi.</p>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-slate-50/70 border border-slate-100 hover:border-rose-200 hover:bg-rose-50/20 transition-all">
+                        <span class="w-7 h-7 rounded-xl bg-rose-500 text-white flex items-center justify-center text-xs font-bold mb-3 shadow-sm shadow-rose-300">4</span>
+                        <h3 class="text-xs font-extrabold text-slate-800 mb-1.5">Hindari Overpricing</h3>
+                        <p class="text-[11px] text-slate-500 leading-relaxed">Menetapkan harga &gt;$10 tanpa konten matang berisiko fatal pada rating negatif review.</p>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-slate-50/70 border border-slate-100 hover:border-violet-200 hover:bg-violet-50/20 transition-all">
+                        <span class="w-7 h-7 rounded-xl bg-violet-600 text-white flex items-center justify-center text-xs font-bold mb-3 shadow-sm shadow-violet-300">5</span>
+                        <h3 class="text-xs font-extrabold text-slate-800 mb-1.5">Ambang Target 70%</h3>
+                        <p class="text-[11px] text-slate-500 leading-relaxed">Rating <strong class="text-slate-800">&gt;70% (Mostly Positive)</strong> merupakan syarat algoritma Steam mendorong visibilitas organik.</p>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Modern Clean Footer -->
+        <footer class="pt-6 pb-10 text-center text-xs text-slate-400 font-medium">
+            Steam Game Analysis Dashboard • Project 1 Big Data • Kaggle Dataset 500 Sample
+        </footer>
+
+    </main>
+
+</div>
+
+<script>
+// ============================================================
+// DATASET EMBEDDED (500 Cleaned Sample from Kaggle Steam)
+// ============================================================
+const GENRE_LABELS = ["Action", "Adventure", "Casual", "Indie", "Simulation", "RPG", "Free To Play", "Racing", "Strategy", "Utilities"];
+const GENRE_VALUES = [194, 128, 91, 46, 12, 11, 4, 4, 4, 2];
+const GENRE_CCU = [21.2, 4.2, 4.7, 2.5, 29.8, 0.6, 0.0, 0.0, 159.8, 0.0];
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+const MONTHLY_COUNTS = [46, 49, 33, 42, 47, 37, 37, 37, 48, 39, 41, 44];
+const MONTHLY_REVIEW = [80.5, 74.9, 73.7, 78.1, 80.1, 79.1, 68.9, 71.5, 73.8, 76.5, 71.3, 78.9];
+
+const FREE_COUNT = 73;
+const PAID_COUNT = 427;
+
+const PRICE_CATS = ['Gratis', '$0.01 - $5', '$5.01 - $10', '$10.01 - $20', '> $20'];
+const AVG_REVIEWS = [67.5, 75.5, 79.7, 79.2, 86.9];
+const SUCCESS_RATES = [42.9, 67.1, 74.5, 87.5, 100.0];
+
+const CORR_DATA = [
+    {l:"Positive ↔ Peak CCU",v:0.931},
+    {l:"Peak CCU ↔ Total_Reviews",v:0.936},
+    {l:"Negative ↔ Total_Reviews",v:0.832},
+    {l:"Negative ↔ Peak CCU",v:0.832},
+    {l:"Positive ↔ Negative",v:0.814},
+    {l:"Negative ↔ Pct_Positive",v:0.108},
+    {l:"Pct_Positive ↔ Total_Reviews",v:0.101},
+    {l:"Positive ↔ Pct_Positive",v:0.099},
+    {l:"Peak CCU ↔ Pct_Positive",v:0.085},
+    {l:"Price ↔ Peak CCU",v:0.039},
+    {l:"Price ↔ Negative",v:0.028},
+    {l:"Price ↔ Total_Reviews",v:0.021},
+    {l:"Price ↔ Positive",v:0.020},
+    {l:"Price ↔ Pct_Positive",v:0.005}
+];
+
+const PROBLEM_GAMES = [
+    {name:"Assetto Corsa Competizione", genre:"Racing", price:16.99, pct:52.9, reviews:17, status:"Overpriced Review Rendah"},
+    {name:"My Bully Is My Lover", genre:"Adventure", price:11.99, pct:64.7, reviews:17, status:"Perlu Poles Gameplay"}
+];
+
+// ============================================================
+// APEXCHARTS BASE CONFIGURATION (Ultra Clean Aesthetic)
+// ============================================================
+const BASE = {
+    chart: { 
+        foreColor: '#94a3b8', 
+        background: 'transparent', 
+        toolbar: { show: false }, 
+        fontFamily: 'Plus Jakarta Sans, sans-serif',
+        animations: {
+            enabled: false // Instant crisp rendering without mid-frame delay
+        }
+    },
+    grid: { 
+        borderColor: '#f1f5f9', 
+        strokeDashArray: 4,
+        xaxis: { lines: { show: false } },
+        yaxis: { lines: { show: true } }
+    },
+    tooltip: { 
+        theme: 'light',
+        x: { show: true },
+        marker: { show: true }
+    },
+    states: { 
+        hover: { filter: { type: 'darken', value: 0.95 } } 
+    },
+};
+
+// 1. Top 10 Genre Game (Horizontal Clean Bar)
+new ApexCharts(document.querySelector('#chart-genre'), {
+    ...BASE,
+    series: [{ name: 'Jumlah Game', data: GENRE_VALUES }],
+    chart: { ...BASE.chart, type: 'bar', height: 350 },
+    plotOptions: { 
+        bar: { 
+            horizontal: true, 
+            borderRadius: 6, 
+            barHeight: '64%',
+            dataLabels: { position: 'top' }
+        } 
+    },
+    colors: ['#4f46e5'],
+    dataLabels: { 
+        enabled: true, 
+        offsetX: 12, 
+        formatter: v => v + ' games',
+        style: { fontSize: '11px', colors: ['#475569'], fontWeight: 700 } 
+    },
+    xaxis: { 
+        categories: GENRE_LABELS, 
+        min: 0,
+        max: 220, 
+        labels: { style: { colors: '#94a3b8', fontSize: '11px' } },
+        axisBorder: { show: false },
+        axisTicks: { show: false }
+    },
+    yaxis: { 
+        labels: { style: { colors: '#334155', fontSize: '11px', fontWeight: 600 } } 
+    },
+    grid: {
+        borderColor: '#f1f5f9',
+        strokeDashArray: 4,
+        xaxis: { lines: { show: true } },
+        yaxis: { lines: { show: false } }
+    }
+}).render();
+
+// 2. Rata-rata Peak CCU per Genre
+new ApexCharts(document.querySelector('#chart-ccu'), {
+    ...BASE,
+    series: [{ name: 'Avg Peak CCU', data: GENRE_CCU }],
+    chart: { ...BASE.chart, type: 'bar', height: 350 },
+    plotOptions: { 
+        bar: { 
+            horizontal: true, 
+            borderRadius: 6, 
+            barHeight: '64%',
+            dataLabels: { position: 'top' }
+        } 
+    },
+    colors: ['#f59e0b'],
+    dataLabels: { 
+        enabled: true, 
+        offsetX: 12, 
+        formatter: v => v.toFixed(1) + ' CCU', 
+        style: { fontSize: '11px', colors: ['#b45309'], fontWeight: 700 } 
+    },
+    xaxis: { 
+        categories: GENRE_LABELS, 
+        min: 0,
+        max: 180, 
+        labels: { style: { colors: '#94a3b8', fontSize: '11px' } },
+        axisBorder: { show: false },
+        axisTicks: { show: false }
+    },
+    yaxis: { 
+        labels: { style: { colors: '#334155', fontSize: '11px', fontWeight: 600 } } 
+    },
+    grid: {
+        borderColor: '#f1f5f9',
+        strokeDashArray: 4,
+        xaxis: { lines: { show: true } },
+        yaxis: { lines: { show: false } }
+    }
+}).render();
+
+// 3. Jumlah Game Dirilis per Bulan (Vertical Columns Like Reference Revenue Chart)
+new ApexCharts(document.querySelector('#chart-monthly'), {
+    ...BASE,
+    series: [{ name: 'Game Dirilis', data: MONTHLY_COUNTS }],
+    chart: { ...BASE.chart, type: 'bar', height: 300 },
+    plotOptions: { 
+        bar: { 
+            borderRadius: 8, 
+            columnWidth: '42%' 
+        } 
+    },
+    colors: ['#4f46e5'],
+    xaxis: { 
+        categories: MONTHS, 
+        labels: { style: { colors: '#94a3b8', fontSize: '11px', fontWeight: 500 } }, 
+        axisBorder: { show: false }, 
+        axisTicks: { show: false } 
+    },
+    yaxis: { 
+        labels: { style: { colors: '#94a3b8', fontSize: '11px' } } 
+    },
+    dataLabels: { enabled: false },
+    tooltip: {
+        y: { formatter: v => v + ' judul game' }
+    }
+}).render();
+
+// 4. Review Positif per Bulan Rilis (Smooth Gradient Area)
+new ApexCharts(document.querySelector('#chart-monthly-review'), {
+    ...BASE,
+    series: [{ name: 'Avg Review Positif', data: MONTHLY_REVIEW }],
+    chart: { ...BASE.chart, type: 'area', height: 300 },
+    colors: ['#10b981'],
+    fill: { 
+        type: 'gradient', 
+        gradient: { 
+            shadeIntensity: 1, 
+            opacityFrom: 0.35, 
+            opacityTo: 0.02, 
+            stops: [0, 95, 100] 
+        } 
+    },
+    stroke: { width: 3, curve: 'smooth' },
+    markers: { 
+        size: 4, 
+        colors: ['#ffffff'], 
+        strokeColors: '#10b981', 
+        strokeWidth: 2.5,
+        hover: { size: 6 } 
+    },
+    xaxis: { 
+        categories: MONTHS, 
+        labels: { style: { colors: '#94a3b8', fontSize: '11px', fontWeight: 500 } }, 
+        axisBorder: { show: false }, 
+        axisTicks: { show: false } 
+    },
+    yaxis: { 
+        min: 50, 
+        max: 100, 
+        labels: { 
+            style: { colors: '#94a3b8', fontSize: '11px' }, 
+            formatter: v => v.toFixed(0) + '%' 
+        } 
+    },
+    dataLabels: { enabled: false },
+    tooltip: {
+        y: { formatter: v => v.toFixed(1) + '% review positif' }
+    }
+}).render();
+
+// 5. Distribusi Harga Game
+new ApexCharts(document.querySelector('#chart-price'), {
+    ...BASE,
+    series: [{ name: 'Jumlah Game', data: [73, 55, 65, 35, 68, 66, 58, 38, 13, 29] }],
+    chart: { ...BASE.chart, type: 'bar', height: 300 },
+    plotOptions: { 
+        bar: { 
+            borderRadius: 7, 
+            columnWidth: '50%' 
+        } 
+    },
+    colors: ['#0284c7'],
+    xaxis: { 
+        categories: ['$0', '$1-2', '$2-3', '$3-4', '$4-5', '$5-7', '$7-10', '$10-15', '$15-20', '$20+'], 
+        labels: { style: { colors: '#94a3b8', fontSize: '10px', fontWeight: 500 } }, 
+        axisBorder: { show: false },
+        axisTicks: { show: false }
+    },
+    yaxis: { 
+        labels: { style: { colors: '#94a3b8', fontSize: '11px' } } 
+    },
+    dataLabels: { enabled: false },
+    tooltip: {
+        y: { formatter: v => v + ' game' }
+    }
+}).render();
+
+// 6. Proporsi Free vs Paid (Modern Donut Like Reference Image)
+new ApexCharts(document.querySelector('#chart-free-paid'), {
+    ...BASE,
+    series: [FREE_COUNT, PAID_COUNT],
+    chart: { ...BASE.chart, type: 'donut', height: 300 },
+    labels: ['Free to Play (14.6%)', 'Berbayar (85.4%)'],
+    colors: ['#38bdf8', '#f97316'],
+    plotOptions: { 
+        pie: { 
+            donut: { 
+                size: '74%', 
+                labels: { 
+                    show: true,
+                    name: { fontSize: '13px', color: '#64748b', fontWeight: 600 },
+                    value: { 
+                        fontSize: '24px', 
+                        fontWeight: 800, 
+                        color: '#0f172a', 
+                        formatter: v => v + ' games' 
+                    },
+                    total: { 
+                        show: true, 
+                        label: 'Total Sample', 
+                        fontSize: '11px', 
+                        color: '#94a3b8', 
+                        fontWeight: 500,
+                        formatter: () => '500 Games' 
+                    }
+                } 
+            } 
+        } 
+    },
+    dataLabels: { enabled: false },
+    stroke: { width: 3, colors: ['#ffffff'] },
+    legend: { 
+        position: 'bottom', 
+        labels: { colors: '#475569' }, 
+        fontSize: '12px',
+        markers: { radius: 6 }
+    },
+}).render();
+
+// 7. Rata-rata Review per Kategori Harga
+new ApexCharts(document.querySelector('#chart-scatter'), {
+    ...BASE,
+    series: [{ name: 'Rata-rata Review', data: AVG_REVIEWS }],
+    chart: { ...BASE.chart, type: 'bar', height: 300 },
+    plotOptions: { 
+        bar: { 
+            borderRadius: 8, 
+            columnWidth: '44%',
+            dataLabels: { position: 'top' }
+        } 
+    },
+    colors: ['#6366f1'],
+    xaxis: { 
+        categories: PRICE_CATS, 
+        labels: { style: { colors: '#94a3b8', fontSize: '11px', fontWeight: 500 } }, 
+        axisBorder: { show: false },
+        axisTicks: { show: false }
+    },
+    yaxis: { 
+        min: 0, 
+        max: 105, 
+        labels: { 
+            style: { colors: '#94a3b8', fontSize: '11px' }, 
+            formatter: v => v.toFixed(0) + '%' 
+        } 
+    },
+    dataLabels: { 
+        enabled: true, 
+        formatter: v => v.toFixed(1) + '%', 
+        style: { fontSize: '11px', colors: ['#4338ca'], fontWeight: 700 },
+        offsetY: -20
+    },
+    annotations: {
+        yaxis: [{
+            y: 70,
+            borderColor: '#f43f5e',
+            strokeDashArray: 4,
+            label: {
+                text: 'Target Rating 70%',
+                position: 'right',
+                textAnchor: 'end',
+                offsetX: -10,
+                style: { color: '#ffffff', background: '#f43f5e', fontSize: '11px', fontWeight: 700, padding: { left: 8, right: 8, top: 4, bottom: 4 } }
+            }
+        }]
+    },
+    tooltip: { y: { formatter: v => v.toFixed(1) + '% review positif' } }
+}).render();
+
+// 8. Persentase Game Sukses (≥70%) per Kategori Harga
+new ApexCharts(document.querySelector('#chart-price-cat'), {
+    ...BASE,
+    series: [{ name: 'Game Sukses', data: SUCCESS_RATES }],
+    chart: { ...BASE.chart, type: 'bar', height: 300 },
+    plotOptions: { 
+        bar: { 
+            borderRadius: 8, 
+            columnWidth: '44%',
+            dataLabels: { position: 'top' }
+        } 
+    },
+    colors: ['#10b981'],
+    xaxis: { 
+        categories: PRICE_CATS, 
+        labels: { style: { colors: '#94a3b8', fontSize: '11px', fontWeight: 500 } }, 
+        axisBorder: { show: false },
+        axisTicks: { show: false }
+    },
+    yaxis: { 
+        min: 0, 
+        max: 118, 
+        labels: { 
+            style: { colors: '#94a3b8', fontSize: '11px' }, 
+            formatter: v => v.toFixed(0) + '%' 
+        } 
+    },
+    dataLabels: { 
+        enabled: true, 
+        formatter: v => v.toFixed(1) + '%', 
+        style: { fontSize: '11px', colors: ['#065f46'], fontWeight: 700 },
+        offsetY: -20
+    },
+    annotations: {
+        yaxis: [{
+            y: 70,
+            borderColor: '#f59e0b',
+            strokeDashArray: 4,
+            label: {
+                text: 'Target 70% Sukses',
+                position: 'right',
+                textAnchor: 'end',
+                offsetX: -10,
+                style: { color: '#ffffff', background: '#f59e0b', fontSize: '11px', fontWeight: 700, padding: { left: 8, right: 8, top: 4, bottom: 4 } }
+            }
+        }]
+    },
+    tooltip: { y: { formatter: v => v.toFixed(1) + '% game capai rating ≥70%' } }
+}).render();
+
+// 9. Korelasi Antar Variabel (Horizontal Bar)
+new ApexCharts(document.querySelector('#chart-correlation'), {
+    ...BASE,
+    series: [{ name: 'Koefisien Korelasi', data: CORR_DATA.map(d => d.v) }],
+    chart: { ...BASE.chart, type: 'bar', height: 420 },
+    plotOptions: { 
+        bar: { 
+            horizontal: true, 
+            borderRadius: 6, 
+            barHeight: '52%', 
+            distributed: true,
+            dataLabels: { position: 'top' }
+        } 
+    },
+    colors: CORR_DATA.map(d => d.v > 0.5 ? '#f43f5e' : d.v > 0.3 ? '#f59e0b' : '#6366f1'),
+    xaxis: {
+        categories: CORR_DATA.map(d => d.l),
+        min: 0,
+        max: 1.05,
+        labels: { style: { colors: '#94a3b8', fontSize: '11px' } },
+        axisBorder: { show: false },
+        axisTicks: { show: false }
+    },
+    yaxis: { 
+        labels: { style: { colors: '#334155', fontSize: '11px', fontWeight: 500 }, maxWidth: 220 } 
+    },
+    dataLabels: {
+        enabled: true,
+        formatter: v => v.toFixed(3),
+        style: { fontSize: '10px', colors: ['#334155'], fontWeight: 700 },
+        offsetX: 14
+    },
+    legend: { show: false },
+    grid: {
+        borderColor: '#f1f5f9',
+        strokeDashArray: 4,
+        xaxis: { lines: { show: true } },
+        yaxis: { lines: { show: false } }
+    },
+    annotations: {
+        xaxis: [{
+            x: 0.5,
+            borderColor: '#f43f5e',
+            strokeDashArray: 4,
+            label: {
+                text: 'Ambang Korelasi Kuat (>0.5)',
+                orientation: 'horizontal',
+                position: 'top',
+                offsetY: 0,
+                style: {
+                    color: '#ffffff',
+                    background: '#f43f5e',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    padding: { left: 8, right: 8, top: 3, bottom: 3 }
+                }
+            }
+        }]
+    },
+}).render();
+
+// 10. Problem Games Table (Modern Clean Rows Matching Reference Order List)
+const tbody = document.getElementById('problem-tbody');
+if (PROBLEM_GAMES.length > 0) {
+    PROBLEM_GAMES.forEach(g => {
+        tbody.innerHTML += `
+            <tr class="hover:bg-slate-50/80 transition-colors">
+                <td class="py-4 px-4 font-bold text-slate-900 flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs">
+                        🎮
+                    </span>
+                    <span>${g.name}</span>
+                </td>
+                <td class="py-4 px-4 text-slate-500 font-medium">${g.genre}</td>
+                <td class="py-4 px-4 font-extrabold text-slate-900">$${g.price.toFixed(2)}</td>
+                <td class="py-4 px-4">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-600 border border-rose-100">
+                        ${g.pct}% Positif
+                    </span>
+                </td>
+                <td class="py-4 px-4 text-slate-500 font-semibold">${g.reviews} ulasan</td>
+                <td class="py-4 px-4 text-right">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">
+                        ${g.status}
+                    </span>
+                </td>
+            </tr>`;
+    });
+}
+</script>
+
+</body>
+</html>

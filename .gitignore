@@ -1,0 +1,7 @@
+# Large raw dataset from Kaggle (>100MB limit on GitHub)
+games.csv
+
+# Jupyter & Python cache
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
